@@ -1,0 +1,12 @@
+  
+  #portfolio-list>.ui.link.card {
+      background-color: rgba(11, 11, 14, 0.5);
+  }
+
+  #portfolio-list>.ui.link.card>.content>.header,
+  #portfolio-list>.ui.link.card>.content>.description,
+  #portfolio-list>.ui.link.card>.content>.meta {
+      color:white;
+  }
+
+ 
