@@ -22,4 +22,4 @@ kadira:flow-router
 kadira:blaze-layout
 zimme:active-route
 standard-minifier-css
-semantic:ui-css@=2.1.2
+natestrauser:select2

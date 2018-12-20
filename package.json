@@ -10,8 +10,8 @@
   "dependencies": {
     "@babel/runtime": "^7.1.5",
     "meteor-node-stubs": "^0.4.1",
+    "request": "^2.88.0",
     "request-promise-native": "^1.0.5",
-    "semantic-ui-css": "^2.4.1",
     "socket.io": "^2.2.0"
   },
   "meteor": {
