@@ -1,7 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Symbols } from '../collections/Symbols.js';
 import request from 'request-promise-native';
-
+import './pubs/Symbols.js';
 
 Meteor.startup(async () => {
   if (Symbols.find({}).count() === 0) {
