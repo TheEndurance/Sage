@@ -3,13 +3,14 @@ import { Mongo } from 'meteor/mongo';
 /**
  * Portfolios Schema
  * "user" : "user id",
+ * "name" : "string", (required)
  * "description": "string",
  * "transactions": [Array of Transactions]
  *  
     * Transactions Schema
     * "symbol": "A",
     * "price": 33.33,'
-    * "purchase_type" : "buy" || "sell"
+    * "purchase_type" : "buy" || "sell" || "watch"
     * "date" : Date,
     * "quantity" : 22.34,
     * "exchange" : ""

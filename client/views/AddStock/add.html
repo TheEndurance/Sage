@@ -1,6 +1,23 @@
 <template name="add">
     <div class="ui container">
-        {{> transactionForm}} {{> portfolioForm}}
+        <h1 class="ui center aligned header inverted">Select portfolio</h1>
+        <div class="ui inverted segment">
+            <div class="ui inverted form">
+                <div class="field">
+                    <label for>Portfolio</label>
+                    <select id="selectPortfolio" name="selectPortfolio" class="">
+                        <option value=""></option>
+                        {{#each portfolios}}
+                            <option value="{{_id}}">{{name}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+            </div>
+        </div>
+        {{#if portfolioSelected}}
+            {{> transactionForm portfolio=selectedPortfolio }} 
+        {{/if}}
+        {{> portfolioForm}}
     </div>
 </template>
 
@@ -11,7 +28,7 @@
         <div class="ui inverted form">
             <div class="field">
                 <label for="symbolSelect">Stock Symbol</label>
-                <div class="ui {{symbolsLoading}} search">
+                <div class="ui {{symbolsLoading}} fluid search">
                     <div class="ui icon input">
                         <input class="prompt" type="text" placeholder="Stock symbol...">
                         <i class="search icon"></i>
