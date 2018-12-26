@@ -5,6 +5,7 @@ import { Mongo } from 'meteor/mongo';
  * "user" : "user id",
  * "name" : "string", (required)
  * "description": "string",
+ * "createdAt" : Date,
  * "transactions": [Array of Transactions]
  *  
     * Transactions Schema

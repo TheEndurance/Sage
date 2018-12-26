@@ -5,13 +5,8 @@ import { ReactiveDict } from 'meteor/reactive-dict';
 import { ReactiveVar } from 'meteor/reactive-var';
 
 //collections
-import { LocalSymbols, Symbols } from '../../../collections/Symbols.js';
+import { Symbols, LocalSymbols } from '../../../collections/Symbols.js';
 import { Portfolios, LocalPortfolios } from '../../../collections/Portfolios.js';
-
-// TODO: Solve symbols reloading on every portfolio change by not 
-// attaching the subscription to the template instance
-
-// TODO: Figure out a way to set a default portfolio, also handles cases where there are no portfolios (or make every user have a default portfolio)
 
 
 /**
@@ -21,27 +16,35 @@ import { Portfolios, LocalPortfolios } from '../../../collections/Portfolios.js'
  *  - select portfolio
  */
 Template.add.onCreated(function () {
-    this.portfolioSelected = new ReactiveVar(false);
-    this.subscribe('get:portfolios');
+    this.portfolio = new ReactiveVar(null);
+    this.subscribe('get:portfolios', () => {
+        const lastPortfolio = Portfolios.findOne({}, { sort: { createdAt: 1 }, limit: 1 });
+        this.portfolio.set(lastPortfolio._id.valueOf());
+    });
 });
 
 Template.add.helpers({
     portfolios() {
         return Portfolios.find({});
     },
-    portfolioSelected() {
+    isPortfolioSelected() {
         const instance = Template.instance();
-        return instance.portfolioSelected.get() === true;
+        return instance.portfolio.get() === this._id.valueOf() ? 'selected' : '';
+    },
+    showTransactionForm() {
+        const instance = Template.instance();
+        return instance.portfolio.get() != null;
+    },
+    getPortfolio() {
+        const instance = Template.instance();
+        return instance.portfolio.get();
     }
 });
 
 Template.add.events({
     'change #selectPortfolio'(evt, tpl) {
-        if (evt.currentTarget.value.length > 0) {
-            tpl.portfolioSelected.set(true);
-        } else {
-            tpl.portfolioSelected.set(false);
-        }
+        const selectedPortfolio = evt.currentTarget.value;
+        tpl.portfolio.set(selectedPortfolio);
     }
 })
 

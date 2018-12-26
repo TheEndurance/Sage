@@ -6,16 +6,15 @@
                 <div class="field">
                     <label for>Portfolio</label>
                     <select id="selectPortfolio" name="selectPortfolio" class="">
-                        <option value=""></option>
                         {{#each portfolios}}
-                            <option value="{{_id}}">{{name}}</option>
+                            <option value="{{_id._str}}" {{isPortfolioSelected}}>{{name}}</option>
                         {{/each}}
                     </select>
                 </div>
             </div>
         </div>
-        {{#if portfolioSelected}}
-            {{> transactionForm portfolio=selectedPortfolio }} 
+        {{#if showTransactionForm}}
+            {{> transactionForm portfolio=getPortfolio }} 
         {{/if}}
         {{> portfolioForm}}
     </div>
