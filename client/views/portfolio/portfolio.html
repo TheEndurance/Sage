@@ -1,0 +1,20 @@
+<template name="portfolioForm">
+    <div class="ui container">
+        <h1 class="ui center aligned header inverted">New Portfolio</h1>
+        <form id="portfolioForm">
+            <div class="ui inverted segment">
+                <div class="ui inverted form">
+                    <div class="field">
+                        <label for="portfolioName">Portfolio name</label>
+                        <input id="portfolioName" name="portfolioName" placeholder="e.g. TFSA, RRSP, Crypto etc..." type="text">
+                    </div>
+                    <div class="field">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Optional description" rows="2"></textarea>
+                    </div>
+                    <div class="ui submit button">Submit</div>
+                </div>
+            </div>
+        </form>
+    </div>
+</template>

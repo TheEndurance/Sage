@@ -1,0 +1,60 @@
+<template name="add">
+    <div class="ui container">
+        <h1 class="ui center aligned header inverted">Select portfolio</h1>
+        <div class="ui inverted {{portfoliosLoaded}} segment">
+            <div class="ui inverted form">
+                <div class="field">
+                    <label for>Portfolio</label>
+                    <select id="selectPortfolio" name="selectPortfolio" class="">
+                        {{#each portfolios}}
+                            <option value="{{_id._str}}" {{isPortfolioSelected}}>{{name}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+            </div>
+        </div>
+        {{#if showTransactionForm}}
+            {{> transactionForm portfolio=getPortfolio }} 
+        {{/if}}
+    </div>
+</template>
+
+
+<template name="transactionForm">
+    <h1 class="ui center aligned header inverted">New Transaction</h1>
+    <div class="ui inverted segment">
+        <div class="ui inverted form">
+            <div class="field">
+                <label for="symbolSelect">Stock Symbol</label>
+                <div class="ui {{symbolsLoaded}} fluid search">
+                    <div class="ui icon input">
+                        <input class="prompt" type="text" placeholder="Stock symbol...">
+                        <i class="search icon"></i>
+                    </div>
+                    <div class="results"></div>
+                </div>
+            </div>
+            <div class="field">
+                <label for>Transaction Type</label>
+                <select id="transactionType" name="transactionType" class="">
+                    <option value="watch">Watch</option>
+                    <option value="sell">Sell</option>
+                    <option selected value="buy">Buy</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="price">Price</label>
+                <input id="price" name="price" type="text" {{watchOnly}}>
+            </div>
+            <div class="field">
+                <label for="quantity">Quantity</label>
+                <input id="quantity" name="quantity" type="text" {{watchOnly}}>
+            </div>
+            <div class="field">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="2"></textarea>
+            </div>
+            <div class="ui submit button">Submit</div>
+        </div>
+    </div>
+</template>
