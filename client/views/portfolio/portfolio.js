@@ -13,50 +13,27 @@ import { createPortfolio } from '../../../methods/portfolio.js';
  * The portfolio form template that allows creation of new portfolios
  */
 
-
- //ugly implentation of errors/success
- /**
-  * Perhaps what I could instead is just one reactive dict variable 'state' that has
-  * errors object or a success object
-  * {
-  *     name: ['error'],
-  * }
-  * vs
-  * {
-  *     success: true
-  * }
-  */
-
 Template.portfolioForm.onCreated(function () {
-    this.errors = new ReactiveDict();
-    this.success = new ReactiveVar(false);
-    this.autorun(() => {
-        const success = Template.instance().success.get();
-        if (success){
-            this.errors.clear();
-        }
-    });
-    this.autorun(()=>{
-        const errors = Template.instance().errors.all();
-        if (Object.keys(errors).length>0){
-            this.success.set(false);
-        }
-    });
+    this.formState = new ReactiveDict();
+    this.formState.setDefault({
+        success: false,
+        errors: {}
+    })
 });
 
 Template.portfolioForm.helpers({
     isError(field) {
-        const errors = Template.instance().errors.get(field)
-        return (errors != null && errors.length > 0) ? 'error' : '';
+        const errors = Template.instance().formState.get('errors');
+        return (errors[field] && errors[field].length > 0) ? 'error' : '';
     },
     errors(field) {
-        return Template.instance().errors.get(field);
+        const errors = Template.instance().formState.get('errors');
+        return errors[field] != null ? errors[field] : [];
     },
     formState() {
-        const success = Template.instance().success.get();
-        const errors = Template.instance().errors.all();
+        const { errors, success } = Template.instance().formState.all();
         let state = '';
-        if (success) {
+        if (success === true) {
             state = 'success';
         } else if (Object.keys(errors).length > 0) {
             state = 'error'
@@ -75,7 +52,6 @@ Template.portfolioForm.events({
 
         createPortfolio.call(data, (err, res) => {
             if (err) {
-                console.log(err);
                 if (err.details) {
                     const errors = {
                         name: [],
@@ -84,14 +60,21 @@ Template.portfolioForm.events({
                     err.details.forEach((fieldError) => {
                         errors[fieldError.name].push(fieldError.message);
                     });
-                    tpl.errors.set(errors);
+                    tpl.formState.set({
+                        success: false,
+                        errors: errors
+                    });
                 } else if (err.reason) {
-                    tpl.errors.set({
-                        custom: [err.reason]
+                    tpl.formState.set({
+                        success: false,
+                        errors: { custom: [err.reason] }
                     });
                 }
             } else {
-                tpl.success.set(true)
+                tpl.formState.set({
+                    success: true,
+                    errors: {}
+                });
             }
         })
     }
