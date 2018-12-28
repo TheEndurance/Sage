@@ -1,6 +1,9 @@
+  #portfolio-list {
+      margin-top:36px;
+  }
   
   #portfolio-list>.ui.link.card {
-      background-color: rgba(11, 11, 14, 0.5);
+      background-image: linear-gradient(to bottom right, rgb(0,0,0), rgb(3,27,33));
   }
 
   #portfolio-list>.ui.link.card>.content>.header,
