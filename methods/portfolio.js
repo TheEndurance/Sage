@@ -1,4 +1,23 @@
 import SimpleSchema from 'simpl-schema';
+import { ValidatedMethod } from 'meteor/mdg:validated-method';
+import { Portfolios } from '../collections/Portfolios.js'
+
+
+export const createPortfolio = new ValidatedMethod({
+    name: 'Portfolios.create',
+    validate: new SimpleSchema({
+        name: { type: String, min: 1 },
+        description: { type: String, optional: true }
+    }).validator(),
+    run(newPortfolio) {
+        const portfolio = Portfolios.findOne({ name: newPortfolio.name });
+        if (portfolio) {
+            throw new Meteor.Error('Portfolios.create.already-exists', 'A portfolio with that name already exists');
+        }
+
+        Portfolios.insert(newPortfolio)
+    }
+})
 
 // This Method encodes the form validation requirements.
 // By defining them in the Method, we do client and server-side

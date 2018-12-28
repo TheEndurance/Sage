@@ -6,6 +6,9 @@ import request from 'request-promise-native';
 import './pubs/Symbols.js';
 import './pubs/Portfolios.js';
 
+//methods
+import '../methods/portfolio.js';
+
 Meteor.startup(async () => {
   if (Symbols.find({}).count() === 0) {
     const options = {

@@ -25,3 +25,4 @@ natestrauser:select2
 reactive-dict
 session
 mdg:validation-error
+mdg:validated-method

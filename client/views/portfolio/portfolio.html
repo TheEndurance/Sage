@@ -3,16 +3,35 @@
         <h1 class="ui center aligned header inverted">New Portfolio</h1>
         <form id="portfolioForm">
             <div class="ui inverted segment">
-                <div class="ui inverted form">
-                    <div class="field">
+                <div class="ui inverted form {{formState}}">
+                    <div class="ui success message">
+                        <div class="header">Portfolio created</div>
+                        <p>You can now perform transactions.</p>
+                    </div>
+                    {{#each error in errors "custom"}}
+                    <div class="ui error message">
+                        <p>{{error}}</p>
+                    </div>
+                    {{/each}}
+                    <div class="field {{isError 'name'}}">
                         <label for="portfolioName">Portfolio name</label>
                         <input id="portfolioName" name="portfolioName" placeholder="e.g. TFSA, RRSP, Crypto etc..." type="text">
                     </div>
-                    <div class="field">
+                    {{#each error in errors "name"}}
+                    <div class="ui error message">
+                        <p>{{error}}</p>
+                    </div>
+                    {{/each}}
+                    <div class="field {{isError 'description'}}">
                         <label for="description">Description</label>
                         <textarea id="description" name="description" placeholder="Optional description" rows="2"></textarea>
                     </div>
-                    <div class="ui submit button">Submit</div>
+                    {{#each error in errors "description"}}
+                    <div class="ui error message">
+                        <p>{{error}}</p>
+                    </div>
+                    {{/each}}
+                    <input type="submit" value="Submit" class="ui submit button" />
                 </div>
             </div>
         </form>
