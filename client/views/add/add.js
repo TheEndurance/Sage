@@ -1,6 +1,5 @@
 import './add.html';
 import { Template } from 'meteor/templating';
-import { Tracker } from 'meteor/tracker';
 import { ReactiveDict } from 'meteor/reactive-dict';
 import { ReactiveVar } from 'meteor/reactive-var';
 
@@ -17,14 +16,16 @@ import { Portfolios } from '../../../collections/Portfolios.js';
  *  - select portfolio
  */
 Template.add.onCreated(function () {
-    this.portfolio = new ReactiveVar('');
+    this.portfolioSelected = new ReactiveVar('');
     this.portfoliosLoaded = new ReactiveVar(false);
     this.subscribe('get:portfolios-name', () => {
+        this.portfoliosLoaded.set(true);
+
+        // set the portfolio select list to the last created portfolio if it exists
         const lastPortfolio = Portfolios.findOne({}, { sort: { createdAt: 1 }, limit: 1 });
         if (lastPortfolio != null) {
-            this.portfolio.set(lastPortfolio._id.valueOf());
+            this.portfolioSelected.set(lastPortfolio._id.valueOf());
         }
-        this.portfoliosLoaded.set(true);
     });
 });
 
@@ -33,27 +34,27 @@ Template.add.helpers({
         return Portfolios.find({});
     },
     portfoliosLoaded() {
-        const instance = Template.instance();
-        return instance.portfoliosLoaded.get() === true ? '' : 'loading'
+        const portfoliosLoaded = Template.instance().portfoliosLoaded.get();
+        return portfoliosLoaded === true ? '' : 'loading'
     },
     isPortfolioSelected() {
-        const instance = Template.instance();
-        return instance.portfolio.get() === this._id.valueOf() ? 'selected' : '';
+        const portfolioSelected = Template.instance().portfolioSelected.get();
+        return portfolioSelected === this._id.valueOf() ? 'selected' : '';
     },
     showTransactionForm() {
-        const portfolio = Template.instance().portfolio.get();
-        return portfolio.length > 0;
+        const portfolioSelected = Template.instance().portfolioSelected.get();
+        return portfolioSelected.length > 0;
     },
     getPortfolio() {
-        const instance = Template.instance();
-        return instance.portfolio.get();
+        const portfolioSelected = Template.instance().portfolioSelected.get();
+        return portfolioSelected;
     }
 });
 
 Template.add.events({
     'change #selectPortfolio'(evt, tpl) {
         const selectedPortfolio = evt.currentTarget.value
-        tpl.portfolio.set(selectedPortfolio);
+        tpl.portfolioSelected.set(selectedPortfolio);
     }
 })
 /* #endregion */

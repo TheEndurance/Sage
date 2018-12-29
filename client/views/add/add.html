@@ -8,7 +8,7 @@
                     <select id="selectPortfolio" name="selectPortfolio" class="">
                             <option value="">No portfolio selected</option>
                         {{#each portfolios}}
-                            <option value="{{_id._str}}" {{isPortfolioSelected}}>{{name}}</option>
+                            <option value="{{_id}}" {{isPortfolioSelected}}>{{name}}</option>
                         {{/each}}
                     </select>
                 </div>
