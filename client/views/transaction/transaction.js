@@ -1,21 +1,21 @@
-import './add.html';
+import './transaction.html';
 import { Template } from 'meteor/templating';
 import { ReactiveDict } from 'meteor/reactive-dict';
 import { ReactiveVar } from 'meteor/reactive-var';
 
 //collections
-import { Symbols } from '../../../collections/Symbols.js';
-import { Portfolios } from '../../../collections/Portfolios.js';
+import { Symbols } from '../../../collections/Symbols';
+import { Portfolios } from '../../../collections/Portfolios';
 
 
-/* #region add */
+/* #region Transaction */
 /**
  * The parent template
  * contains:
  *  - transaction form and portfolio form as children templates
  *  - select portfolio
  */
-Template.add.onCreated(function () {
+Template.transaction.onCreated(function () {
     this.portfolioSelected = new ReactiveVar('');
     this.portfoliosLoaded = new ReactiveVar(false);
     this.subscribe('get:portfolios-name', () => {
@@ -29,7 +29,7 @@ Template.add.onCreated(function () {
     });
 });
 
-Template.add.helpers({
+Template.transaction.helpers({
     portfolios() {
         return Portfolios.find({});
     },
@@ -51,7 +51,7 @@ Template.add.helpers({
     }
 });
 
-Template.add.events({
+Template.transaction.events({
     'change #selectPortfolio'(evt, tpl) {
         const selectedPortfolio = evt.currentTarget.value
         tpl.portfolioSelected.set(selectedPortfolio);
