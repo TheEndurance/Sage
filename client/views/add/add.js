@@ -17,11 +17,13 @@ import { Portfolios } from '../../../collections/Portfolios.js';
  *  - select portfolio
  */
 Template.add.onCreated(function () {
-    this.portfolio = new ReactiveVar(null);
+    this.portfolio = new ReactiveVar('');
     this.portfoliosLoaded = new ReactiveVar(false);
     this.subscribe('get:portfolios-name', () => {
         const lastPortfolio = Portfolios.findOne({}, { sort: { createdAt: 1 }, limit: 1 });
-        this.portfolio.set(lastPortfolio._id.valueOf());
+        if (lastPortfolio != null) {
+            this.portfolio.set(lastPortfolio._id.valueOf());
+        }
         this.portfoliosLoaded.set(true);
     });
 });
@@ -30,7 +32,7 @@ Template.add.helpers({
     portfolios() {
         return Portfolios.find({});
     },
-    portfoliosLoaded(){
+    portfoliosLoaded() {
         const instance = Template.instance();
         return instance.portfoliosLoaded.get() === true ? '' : 'loading'
     },
@@ -39,8 +41,8 @@ Template.add.helpers({
         return instance.portfolio.get() === this._id.valueOf() ? 'selected' : '';
     },
     showTransactionForm() {
-        const instance = Template.instance();
-        return instance.portfolio.get() != null;
+        const portfolio = Template.instance().portfolio.get();
+        return portfolio.length > 0;
     },
     getPortfolio() {
         const instance = Template.instance();
@@ -50,7 +52,7 @@ Template.add.helpers({
 
 Template.add.events({
     'change #selectPortfolio'(evt, tpl) {
-        const selectedPortfolio = evt.currentTarget.value;
+        const selectedPortfolio = evt.currentTarget.value
         tpl.portfolio.set(selectedPortfolio);
     }
 })

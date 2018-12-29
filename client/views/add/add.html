@@ -6,6 +6,7 @@
                 <div class="field">
                     <label for>Portfolio</label>
                     <select id="selectPortfolio" name="selectPortfolio" class="">
+                            <option value="">No portfolio selected</option>
                         {{#each portfolios}}
                             <option value="{{_id._str}}" {{isPortfolioSelected}}>{{name}}</option>
                         {{/each}}

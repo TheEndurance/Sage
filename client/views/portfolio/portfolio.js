@@ -74,6 +74,7 @@ Template.portfolioForm.events({
                     success: true,
                     errors: {}
                 });
+                evt.target.reset();
             }
         })
     }
