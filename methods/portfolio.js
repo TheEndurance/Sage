@@ -15,7 +15,9 @@ export const createPortfolio = new ValidatedMethod({
             throw new Meteor.Error('Portfolios.create.already-exists', 'A portfolio with that name already exists');
         }
 
-        //TODO: make sure to add other fields like createdAt
+        newPortfolio.createdAt = new Date();
+        newPortfolio.transactions = [];
+        
         Portfolios.insert(newPortfolio)
     }
 });
