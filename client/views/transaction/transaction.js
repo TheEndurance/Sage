@@ -7,6 +7,11 @@ import { ReactiveVar } from 'meteor/reactive-var';
 import { Symbols } from '../../../collections/Symbols';
 import { Portfolios } from '../../../collections/Portfolios';
 
+//methods
+import { createTransaction } from '../../../methods/transactions.js';
+
+//utils
+import { getDatetimeLocal } from '../../../lib/helpers/datetime.js';
 
 /* #region Transaction */
 /**
@@ -60,7 +65,8 @@ Template.transaction.events({
 /* #endregion */
 
 
-/* #region transactionForm */
+/* #region Transaction Form */
+
 /**
  * The transaction form template
  */
@@ -68,7 +74,9 @@ Template.transactionForm.onCreated(function () {
     //State
     this.state = new ReactiveDict();
     this.state.setDefault({
-        watch: '',
+        errors: {},
+        success: false,
+        watch: false,
         symbolsLoaded: false
     });
 
@@ -102,13 +110,84 @@ Template.transactionForm.helpers({
     watchOnly() {
         const instance = Template.instance();
         return instance.state.get('watch') === true ? 'disabled' : '';
+    },
+    isError(field) {
+        const errors = Template.instance().state.get('errors');
+        return (errors[field] && errors[field].length > 0) ? 'error' : '';
+    },
+    errors(field) {
+        const errors = Template.instance().state.get('errors');
+        return errors[field] != null ? errors[field] : [];
+    },
+    formState() {
+        const { errors, success } = Template.instance().state.all();
+        let state = '';
+        if (success === true) {
+            state = 'success';
+        } else if (Object.keys(errors).length > 0) {
+            state = 'error'
+        }
+        return state;
+    },
+    dateNow(){
+        return getDatetimeLocal();
     }
 });
 
 Template.transactionForm.events({
     // Set the transaction form to watch only mode (currently disables price/quantity input fields)
-    'change #transactionType'(evt, tpl) {
+    'change #type'(evt, tpl) {
         const watchOnly = evt.currentTarget.value === 'watch';
-        tpl.state.set('watch', watchOnly);
+        tpl.state.set({
+            watch: watchOnly
+        });
+    },
+    'submit #transactionForm'(evt, tpl) {
+        evt.preventDefault();
+        const transaction = {
+            symbol: evt.target.symbol.value,
+            type: evt.target.type.value,
+            date: new Date(evt.target.date.value),
+            price: parseFloat(evt.target.price.value) || undefined,
+            quantity: parseFloat(evt.target.quantity.value) || undefined,
+            notes: evt.target.notes.value
+        }
+        const { portfolio } = tpl.data;
+        createTransaction.call({
+            transaction: transaction,
+            portfolio_id: portfolio
+        }, (err, res) => {
+            if (err) {
+                if (err.details) {
+                    const errors = {
+                        'transaction.symbol': [],
+                        'transaction.type': [],
+                        'transaction.price': [],
+                        'transaction.quantity': [],
+                        'transaction.date': [],
+                        'transaction.notes': []
+                    }
+                    err.details.forEach((fieldError) => {
+                        errors[fieldError.name].push(fieldError.message);
+                    });
+                    tpl.state.set({
+                        success: false,
+                        errors: errors
+                    });
+                } else if (err.reason) {
+                    tpl.state.set({
+                        success: false,
+                        errors: { custom: [err.reason] }
+                    })
+                }
+            } else {
+                tpl.state.set({
+                    success: true,
+                    errors: {}
+                });
+            }
+        });
     }
 });
+
+/* #endregion */

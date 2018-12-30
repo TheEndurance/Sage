@@ -7,7 +7,8 @@ import './pubs/Symbols.js';
 import './pubs/Portfolios.js';
 
 //methods
-import '../methods/portfolio.js';
+import '../methods/portfolios.js';
+import '../methods/transactions.js'
 
 Meteor.startup(async () => {
   if (Symbols.find({}).count() === 0) {

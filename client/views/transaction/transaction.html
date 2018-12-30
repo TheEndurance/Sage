@@ -6,17 +6,15 @@
                 <div class="field">
                     <label for>Portfolio</label>
                     <select id="selectPortfolio" name="selectPortfolio" class="">
-                            <option value="">No portfolio selected</option>
+                        <option value="">No portfolio selected</option>
                         {{#each portfolios}}
-                            <option value="{{_id}}" {{isPortfolioSelected}}>{{name}}</option>
+                        <option value="{{_id}}" {{isPortfolioSelected}}>{{name}}</option>
                         {{/each}}
                     </select>
                 </div>
             </div>
         </div>
-        {{#if showTransactionForm}}
-            {{> transactionForm portfolio=getPortfolio }} 
-        {{/if}}
+        {{#if showTransactionForm}} {{> transactionForm portfolio=getPortfolio }} {{/if}}
     </div>
 </template>
 
@@ -24,38 +22,87 @@
 <template name="transactionForm">
     <h1 class="ui center aligned header inverted">New Transaction</h1>
     <div class="ui inverted segment">
-        <div class="ui inverted form">
-            <div class="field">
-                <label for="symbolSelect">Stock Symbol</label>
-                <div class="ui {{symbolsLoaded}} fluid search">
-                    <div class="ui icon input">
-                        <input class="prompt" type="text" placeholder="Stock symbol...">
-                        <i class="search icon"></i>
-                    </div>
-                    <div class="results"></div>
+        <form id="transactionForm">
+            <div class="ui inverted form {{formState}}">
+                <div class="ui success message">
+                    <div class="header">Transaction successfully created!</div>
                 </div>
+                {{#each error in errors "custom"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                {{#each error in errors "portfolio_id"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                <div class="field">
+                    <label for="symbol">Stock Symbol</label>
+                    <div class="ui {{symbolsLoaded}} fluid search">
+                        <div class="ui icon input">
+                            <input class="prompt" type="text" placeholder="Stock symbol..." id="symbol" name="symbol">
+                            <i class="search icon"></i>
+                        </div>
+                        <div class="results"></div>
+                    </div>
+                </div>
+                {{#each error in errors "transaction.symbol"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                <div class="field">
+                    <label for="type">Transaction Type</label>
+                    <select id="type" name="type" class="">
+                        <option selected value="buy">Buy</option>
+                        <option value="sell">Sell</option>
+                        <option value="watch">Watch</option>
+                    </select>
+                </div>
+                {{#each error in errors "transaction.type"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                <div class="field">
+                    <label for="date">Date of Transaction</label>
+                    <input id="date" name="date" type="datetime-local" value="{{dateNow}}" step="any" max="{{dateNow}}" >
+                </div>
+                {{#each error in errors "transaction.date"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                <div class="field">
+                    <label for="price">Price</label>
+                    <input id="price" name="price" type="number" step="any" min="0" {{watchOnly}}>
+                </div>
+                {{#each error in errors "transaction.price"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                <div class="field">
+                    <label for="quantity">Quantity</label>
+                    <input id="quantity" name="quantity" type="number" step="any" min="0" {{watchOnly}}>
+                </div>
+                {{#each error in errors "transaction.quantity"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                <div class="field">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="2"></textarea>
+                </div>
+                {{#each error in errors "transaction.notes"}}
+                <div class="ui error message">
+                    <p>{{error}}</p>
+                </div>
+                {{/each}}
+                <input type="submit" value="Submit" class="ui submit button" />
             </div>
-            <div class="field">
-                <label for>Transaction Type</label>
-                <select id="transactionType" name="transactionType" class="">
-                    <option value="watch">Watch</option>
-                    <option value="sell">Sell</option>
-                    <option selected value="buy">Buy</option>
-                </select>
-            </div>
-            <div class="field">
-                <label for="price">Price</label>
-                <input id="price" name="price" type="text" {{watchOnly}}>
-            </div>
-            <div class="field">
-                <label for="quantity">Quantity</label>
-                <input id="quantity" name="quantity" type="text" {{watchOnly}}>
-            </div>
-            <div class="field">
-                <label for="notes">Notes</label>
-                <textarea id="notes" name="notes" rows="2"></textarea>
-            </div>
-            <div class="ui submit button">Submit</div>
-        </div>
+        </form>
     </div>
 </template>

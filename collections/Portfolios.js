@@ -11,9 +11,10 @@ import { Mongo } from 'meteor/mongo';
     * Transactions Schema
     * "symbol": "A",
     * "price": 33.33,'
-    * "purchase_type" : "buy" || "sell" || "watch"
-    * "date" : Date,
+    * "type" : "buy" || "sell" || "watch"
+    * "createdAt" : Date,
     * "quantity" : 22.34,
+    *  "notes" : "",
     * "exchange" : ""
 */
 

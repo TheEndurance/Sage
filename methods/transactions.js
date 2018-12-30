@@ -3,14 +3,33 @@ import { ValidatedMethod } from 'meteor/mdg:validated-method';
 
 import { Portfolios } from '../collections/Portfolios.js'
 
+const requiredBasedOnWatch = function () {
+    let shouldBeRequired = this.siblingField('type').value !== 'watch';
+    if (shouldBeRequired) {
+        if (this.value == null) {
+            return SimpleSchema.ErrorTypes.REQUIRED;
+        }
+    }
+}
 
 const TransactionsSchema = new SimpleSchema({
     symbol: { type: String, min: 1 },
-    price: { type: Number, min: 0.00 },
-    purchase_type: { type: String, regEx: /^(buy|watch|sell)$/ },
+    type: { type: String, regEx: /^(buy|watch|sell)$/ },
+    price: {
+        type: Number,
+        optional: true,
+        min: 0.00,
+        custom: requiredBasedOnWatch
+    },
+    quantity: {
+        type: Number,
+        optional: true,
+        min: 0.00,
+        custom: requiredBasedOnWatch
+    },
     date: { type: Date },
-    quantity: { type: Number, min: 0.00 },
     exchange: { type: String, optional: true },
+    notes: { type: String, optional: true }
 });
 
 export const createTransaction = new ValidatedMethod({
@@ -18,7 +37,7 @@ export const createTransaction = new ValidatedMethod({
     validate: new SimpleSchema({
         transaction: TransactionsSchema,
         portfolio_id: { type: String, min: 1 }
-    }).validator(),
+    }).validator({ clean: true }),
     run({ transaction, portfolio_id }) {
         const portfolio = Portfolios.findOne({ _id: portfolio_id });
         if (portfolio == null) {

@@ -3,7 +3,7 @@ import { Template } from 'meteor/templating';
 import { ReactiveDict } from 'meteor/reactive-dict';
 
 //methods
-import { createPortfolio } from '../../../methods/portfolio.js';
+import { createPortfolio } from '../../../methods/portfolios.js';
 
 /* #endregion */
 
