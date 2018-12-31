@@ -1,40 +1,6 @@
 <template name="home">
     <div class="ui container">
-        <div id="portfolio-list" class="ui three stackable link cards">
-            <div class="ui link card">
-                <div class="content">
-                    <div class="header">Portfolio 1</div>
-                    <div class="meta">
-                        <span class="category">$537.32</span>
-                    </div>
-                    <div class="description">
-                        <p></p>
-                    </div>
-                </div>
-            </div>
-            <div class="ui link card">
-                <div class="content">
-                    <div class="header">Portfolio 2</div>
-                    <div class="meta">
-                        <span class="category">$1537.32</span>
-                    </div>
-                    <div class="description">
-                        <p></p>
-                    </div>
-                </div>
-            </div>
-            <div class="ui link card">
-                <div class="content">
-                    <div class="header">Portfolio 3</div>
-                    <div class="meta">
-                        <span class="category">$32537.32</span>
-                    </div>
-                    <div class="description">
-                        <p></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {{> portfolioList}}
         <hr>
         <table class="ui padded inverted table">
             <thead>
@@ -65,5 +31,20 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+</template>
+
+<template name="portfolioList">
+    <div id="portfolio-list" class="ui stackable link cards">
+        {{#each portfolios}}
+        <div class="ui link card {{isSelected}}">
+            <div class="content">
+                <div class="header">{{name}}</div>
+                <div class="meta">
+                    <span class="category">$537.32</span>
+                </div>
+            </div>
+        </div>
+        {{/each}}
     </div>
 </template>
