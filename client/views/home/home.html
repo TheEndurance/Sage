@@ -1,6 +1,6 @@
 <template name="home">
     <div class="ui container">
-        {{> portfolioList}}
+        {{> portfolioList dataContext=portfolioListData}}
         <hr>
         <table class="ui padded inverted table">
             <thead>
@@ -35,16 +35,30 @@
 </template>
 
 <template name="portfolioList">
-    <div id="portfolio-list" class="ui stackable link cards">
-        {{#each portfolios}}
-        <div class="ui link card {{isSelected}}">
-            <div class="content">
-                <div class="header">{{name}}</div>
-                <div class="meta">
-                    <span class="category">$537.32</span>
+    {{#if isLoaded}}
+        {{#if portfoliosExist}}
+            <div class="ui inverted segment">
+                <div id="portfolio-list" class="ui stackable link cards">
+                    {{#each portfolio in portfolios}}
+                    <div class="ui link card {{isSelected}}">
+                        <div class="content">
+                            <div class="header">{{portfolio.name}}</div>
+                            <div class="meta">
+                                <span class="category">${{portfolio.total}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {{/each}}
                 </div>
             </div>
-        </div>
-        {{/each}}
+        {{else}}
+            <div class="ui inverted segment">
+                <h1 class="ui header center aligned">No portfolios, click <a href="/portfolio">here</a> to add one.</h1>
+            </div>
+        {{/if}}
+    {{else}}
+    <div class="ui inverted loading segment">
+        <h1 class="ui header center aligned">Loading...</h1>
     </div>
+    {{/if}}
 </template>
