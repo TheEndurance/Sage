@@ -93,6 +93,19 @@ Template.portfolioList.helpers({
         return Portfolios.find({}).count() > 0;
     },
     portfolios() {
+        //TODO: OPTIMIZE
+        //I can make more optimizations here, since livePrices is reactive and expected to update very frequently
+        //it might be better to extract the calculations of the transactions sums to inside of the mongo collection itself
+        //that way we won't need to iterate over the transactions every time live prices updates, only if portfolios update..
+        /**
+         * Last Collection
+         * {
+         *  symbol : "AAPL",
+         *  quantity : calculated from Portfolios,
+         *  price : 194.73 (updates from IEX API)
+         *  total : calculated reactively by price * quantity
+         * }
+         */
         const { dataContext: { portfolios, livePrices } } = Template.currentData();
         const portfolioList = portfolios.find({}).fetch().map((portfolio) => {
             let total = 0.00;
