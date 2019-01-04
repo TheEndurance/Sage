@@ -1,46 +1,17 @@
 <template name="home">
     <div class="ui container">
-        {{> portfolioList dataContext=portfolioListData}}
-        <hr>
-        <table class="ui padded inverted table">
-            <thead>
-                <tr>
-                    <th>Stock</th>
-                    <th>Price</th>
-                    <th>Holdings</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>VFV</td>
-                    <td>
-                        <div>32</div>
-                        <div>+0.49%</div>
-                    </td>
-                    <td>$353.51</td>
-                </tr>
-                <tr>
-                    <td>VIU</td>
-                    <td>22</td>
-                    <td>$232.21</td>
-                </tr>
-                <tr>
-                    <td>VCN</td>
-                    <td>11</td>
-                    <td>$451.99</td>
-                </tr>
-            </tbody>
-        </table>
+        {{> portfolioList dataContext=dataContext  uiContext=portfolioListUIContext}}
+        {{> symbolTable dataContext=dataContext uiContext=symbolTableUIContext}}
     </div>
 </template>
 
 <template name="portfolioList">
-    {{#if isLoaded}}
+    {{#if dataContext.subsReady}}
         {{#if portfoliosExist}}
             <div class="ui inverted segment">
                 <div id="portfolio-list" class="ui stackable link cards">
                     {{#each portfolio in portfolios}}
-                    <div class="ui link card {{isSelected}}">
+                    <div class="ui link card {{isSelected portfolio.name}}" data-name="{{portfolio.name}}">
                         <div class="content">
                             <div class="header">{{portfolio.name}}</div>
                             <div class="description">
@@ -58,7 +29,36 @@
         {{/if}}
     {{else}}
     <div class="ui inverted loading segment">
-        <h1 class="ui header center aligned">Loading...</h1>
+        <h1 class="ui header center aligned">Loading Portfolios...</h1>
     </div>
     {{/if}}
+</template>
+
+<template name="symbolTable">
+        {{#if dataContext.subsReady}}
+        <table class="ui padded selectable inverted table">
+            <thead>
+                <tr>
+                    <th>Stock</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Holdings</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each symbol in symbols}}
+                <tr>
+                    <td>{{symbol.symbol}}</td>
+                    <td>${{symbol.price}} <div class="{{symbol.displayColor}}">{{symbol.percentageDifference}}%</div></td>
+                    <td>{{symbol.quantity}}</td>
+                    <td>${{symbol.holdings}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+            <div class="ui inverted loading segment">
+                <h1 class="ui header center aligned">Loading Stocks...</h1>
+            </div>
+        {{/if}}
 </template>

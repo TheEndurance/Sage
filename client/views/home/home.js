@@ -1,4 +1,5 @@
 import { Template } from 'meteor/templating';
+import { ReactiveVar } from 'meteor/reactive-var';
 import io from 'socket.io-client';
 import './home.css';
 import './home.html';
@@ -8,7 +9,7 @@ let SOCKET;
 
 //collections
 import { Portfolios } from '../../../collections/Portfolios.js';
-import { Last, PortfolioSnapshot } from '../../../collections/IEX.js'
+import { LivePrices, PortfolioSnapshot } from '../../../collections/IEX.js'
 
 //IEX endpoints
 const lastURL = 'https://ws-api.iextrading.com/1.0/last';
@@ -17,6 +18,7 @@ const ohlcURL = (symbol) => `https://api.iextrading.com/1.0/stock/${symbol}/ohlc
 
 /* #region Home parent template */
 Template.home.onCreated(function () {
+    this.selectedPortfolio = new ReactiveVar(null);
     //IEX Websocket endpoint
     const socket = SOCKET = io(lastURL);
 
@@ -31,7 +33,7 @@ Template.home.onCreated(function () {
                 const portfolios = Portfolios.find({}).fetch();
                 const symbols = {};
                 portfolios.forEach((portfolio) => {
-                    PortfolioSnapshot.insert({ name: portfolio.name, symbols: [] });
+                    PortfolioSnapshot.update({ name: portfolio.name }, { name: portfolio.name, createdAt: portfolio.createdAt, symbols: [] }, { upsert: true });
                     if (!portfolio.transactions || portfolio.transactions.length === 0) return;
                     portfolio.transactions.forEach((transaction) => {
                         const multiplier = transaction.type === 'buy' ? 1 : -1;
@@ -69,17 +71,17 @@ Template.home.onCreated(function () {
     socket.on('message', async (message) => {
         const { symbol, price } = JSON.parse(message);
 
-        const last = Last.findOne({ symbol: symbol }) || { symbol: symbol };
+        const livePrice = LivePrices.findOne({ symbol: symbol }) || { symbol: symbol };
 
         //if the price close time is more than 24 hours then we need to refetch new market data
-        if (!last.closeTime || new Date().valueOf() - new Date(last.closeTime) >= DAY_AS_MILLISECONDS) {
+        if (!livePrice.closeTime || new Date().valueOf() - new Date(livePrice.closeTime) >= DAY_AS_MILLISECONDS) {
             const response = await fetch(ohlcURL(symbol));
             const { close } = await response.json();
-            last.closePrice = close.price;
-            last.closeTime = close.time;
+            livePrice.closePrice = close.price;
+            livePrice.closeTime = close.time;
         }
-        last.price = price;
-        Last.update({ symbol: symbol }, last, { upsert: true });
+        livePrice.price = price;
+        LivePrices.update({ symbol: symbol }, livePrice, { upsert: true });
     });
 });
 
@@ -88,35 +90,61 @@ Template.home.onDestroyed(function () {
 });
 
 Template.home.helpers({
-    portfolioListData() {
+    dataContext() {
         const instance = Template.instance();
         return {
             subsReady: instance.subscriptionsReady(),
-            portfolios: PortfolioSnapshot,
-            livePrices: Last
+            PortfolioSnapshot: PortfolioSnapshot,
+            LivePrices: LivePrices,
+        }
+    },
+    portfolioListUIContext() {
+        const instance = Template.instance();
+        return {
+            selectedPortfolio: instance.selectedPortfolio
+        }
+    },
+    symbolTableUIContext() {
+        const instance = Template.instance();
+        return {
+            selectedPortfolio: instance.selectedPortfolio.get()
         }
     }
 });
+
 /* #endregion */
 
 
 /* #region Portfolio List */
 Template.portfolioList.onCreated(function () {
+    const { uiContext: { selectedPortfolio }, dataContext: { PortfolioSnapshot } } = Template.currentData();
+
+    this.autorun(() => {
+        const portfolio = PortfolioSnapshot.findOne({}, { sort: { createdAt: 1 }, limit: 1 });
+        if (portfolio && portfolio.name) {
+            selectedPortfolio.set(portfolio.name);
+        }
+    })
 });
 
 
 Template.portfolioList.helpers({
+    isSelected(name) {
+        const { uiContext: { selectedPortfolio } } = Template.currentData();
+        return selectedPortfolio.get() === name ? 'selected' : '';
+    },
     portfoliosExist() {
-        return Portfolios.find({}).count() > 0;
+        const { dataContext: { PortfolioSnapshot } } = Template.currentData();
+        return PortfolioSnapshot.find({}).count() > 0;
     },
     portfolios() {
-        const { dataContext: { portfolios, livePrices } } = Template.currentData();
-        const portfolioList = portfolios.find({}).fetch().map((portfolio) => {
+        const { dataContext: { PortfolioSnapshot, LivePrices } } = Template.currentData();
+        const portfolioList = PortfolioSnapshot.find({}).fetch().map((portfolio) => {
             let total = 0.00;
             let closeTotal = 0.00;
             if (portfolio.symbols && portfolio.symbols.length > 0) {
                 portfolio.symbols.forEach((symbol) => {
-                    const livePrice = livePrices.findOne({ symbol: symbol.symbol });
+                    const livePrice = LivePrices.findOne({ symbol: symbol.symbol });
                     let addToTotal = 0.00;
                     let addToCloseTotal = 0.00;
 
@@ -138,10 +166,45 @@ Template.portfolioList.helpers({
             }
         });
         return portfolioList;
-    },
-    isLoaded() {
-        const { dataContext: { subsReady } } = Template.currentData();
-        return subsReady;
+    }
+});
+
+Template.portfolioList.events({
+    'click .ui.link.card'(evt, tpl) {
+        const { uiContext: { selectedPortfolio } } = Template.currentData();
+        selectedPortfolio.set(evt.currentTarget.dataset.name);
+    }
+})
+/* #endregion */
+
+/* #region symbolTable */
+
+Template.symbolTable.helpers({
+    symbols() {
+        const { uiContext: { selectedPortfolio }, dataContext: { LivePrices, PortfolioSnapshot } } = Template.currentData();
+        if (selectedPortfolio == null) return;
+
+        const portfolio = PortfolioSnapshot.findOne({ name: selectedPortfolio });
+        if (!portfolio.symbols || portfolio.symbols.length === 0) return;
+
+        const symbols = portfolio.symbols.map((symbol) => {
+            const livePrice = LivePrices.findOne({ symbol: symbol.symbol });
+            if (!livePrice) return;
+
+            const total = symbol.quantity * livePrice.price;
+            const closeTotal = symbol.quantity * livePrice.closePrice;
+            const percentageDifference = closeTotal !== 0 ? (((total - closeTotal) / closeTotal) * 100) : 0.00;
+            return {
+                symbol: symbol.symbol,
+                price: livePrice.price,
+                quantity: symbol.quantity,
+                percentageDifference: percentageDifference.toFixed(2),
+                holdings: total.toFixed(2),
+                displayColor: percentageDifference >= 0 ? 'green' : 'red'
+            }
+        });
+
+        return symbols;
     }
 });
 /* #endregion */
