@@ -13,3 +13,11 @@
   #portfolio-list>.ui.link.card>.content>.header, #portfolio-list>.ui.link.card>.content>.description, #portfolio-list>.ui.link.card>.content>.meta {
       color: white;
   }
+
+  .red {
+      color: rgb(235, 0, 0)
+  }
+
+  .green {
+      color: rgb(9, 240, 1)
+  }

@@ -8,7 +8,7 @@ let SOCKET;
 
 //collections
 import { Portfolios } from '../../../collections/Portfolios.js';
-import { Last } from '../../../collections/IEX.js'
+import { Last, PortfolioSnapshot } from '../../../collections/IEX.js'
 
 //IEX endpoints
 const lastURL = 'https://ws-api.iextrading.com/1.0/last';
@@ -31,15 +31,35 @@ Template.home.onCreated(function () {
                 const portfolios = Portfolios.find({}).fetch();
                 const symbols = {};
                 portfolios.forEach((portfolio) => {
+                    PortfolioSnapshot.insert({ name: portfolio.name, symbols: [] });
                     if (!portfolio.transactions || portfolio.transactions.length === 0) return;
                     portfolio.transactions.forEach((transaction) => {
-                        if (symbols[transaction.symbol]) return;
+                        const multiplier = transaction.type === 'buy' ? 1 : -1;
+                        const incrementQuantity = transaction.quantity * multiplier;
+
+                        const symbol = PortfolioSnapshot.findOne({ name: portfolio.name, 'symbols.symbol': transaction.symbol }, { reactive: false });
+                        if (symbol) {
+                            PortfolioSnapshot.update(
+                                { name: portfolio.name, 'symbols.symbol': transaction.symbol },
+                                {
+                                    '$inc':
+                                        { 'symbols.$.quantity': incrementQuantity }
+                                });
+                        } else {
+                            PortfolioSnapshot.update(
+                                { name: portfolio.name },
+                                {
+                                    '$addToSet':
+                                        { symbols: { symbol: transaction.symbol, quantity: incrementQuantity } }
+                                });
+                        }
                         symbols[transaction.symbol] = true;
                     });
                 });
                 const symbolsString = Object.keys(symbols).reduce((accum, current, index) => {
                     return index === 0 ? current : accum + ',' + current;
                 }, '');
+
                 socket.emit('subscribe', symbolsString);
             }
         });
@@ -48,21 +68,18 @@ Template.home.onCreated(function () {
     //Live IEX data that updates the local collections or inserts if there is none
     socket.on('message', async (message) => {
         const { symbol, price } = JSON.parse(message);
-        let update = { symbol: symbol, price: price };
-        const last = Last.findOne({ symbol: symbol });
 
-        //If there is no local data for a stock OR if the price close time is more than 24 hours then
-        //we need to refetch new market data
-        if (!last || new Date().valueOf() - new Date(last.closeTime) >= DAY_AS_MILLISECONDS) {
+        const last = Last.findOne({ symbol: symbol }) || { symbol: symbol };
+
+        //if the price close time is more than 24 hours then we need to refetch new market data
+        if (!last.closeTime || new Date().valueOf() - new Date(last.closeTime) >= DAY_AS_MILLISECONDS) {
             const response = await fetch(ohlcURL(symbol));
             const { close } = await response.json();
-            update.closePrice = close.price;
-            update.closeTime = close.time;
+            last.closePrice = close.price;
+            last.closeTime = close.time;
         }
-
-        Last.update({ symbol: symbol },
-            update,
-            { upsert: true });
+        last.price = price;
+        Last.update({ symbol: symbol }, last, { upsert: true });
     });
 });
 
@@ -75,7 +92,7 @@ Template.home.helpers({
         const instance = Template.instance();
         return {
             subsReady: instance.subscriptionsReady(),
-            portfolios: Portfolios,
+            portfolios: PortfolioSnapshot,
             livePrices: Last
         }
     }
@@ -93,38 +110,31 @@ Template.portfolioList.helpers({
         return Portfolios.find({}).count() > 0;
     },
     portfolios() {
-        //TODO: OPTIMIZE
-        //I can make more optimizations here, since livePrices is reactive and expected to update very frequently
-        //it might be better to extract the calculations of the transactions sums to inside of the mongo collection itself
-        //that way we won't need to iterate over the transactions every time live prices updates, only if portfolios update..
-        /**
-         * Last Collection
-         * {
-         *  symbol : "AAPL",
-         *  quantity : calculated from Portfolios,
-         *  price : 194.73 (updates from IEX API)
-         *  total : calculated reactively by price * quantity
-         * }
-         */
         const { dataContext: { portfolios, livePrices } } = Template.currentData();
         const portfolioList = portfolios.find({}).fetch().map((portfolio) => {
             let total = 0.00;
-            if (portfolio.transactions && portfolio.transactions.length > 0) {
-                total = portfolio.transactions.reduce((sum, transaction) => {
-                    const livePrice = livePrices.findOne({ symbol: transaction.symbol });
-                    let addToSum = 0.00;
+            let closeTotal = 0.00;
+            if (portfolio.symbols && portfolio.symbols.length > 0) {
+                portfolio.symbols.forEach((symbol) => {
+                    const livePrice = livePrices.findOne({ symbol: symbol.symbol });
+                    let addToTotal = 0.00;
+                    let addToCloseTotal = 0.00;
 
-                    if (livePrice && livePrice.price && transaction.quantity > 0) {
-                        const multiplier = transaction.type === 'buy' ? 1 : -1;
-                        addToSum = (transaction.quantity * livePrice.price * multiplier);
+                    if (livePrice && livePrice.price && livePrice.closePrice && symbol.quantity > 0) {
+                        addToTotal = symbol.quantity * livePrice.price;
+                        addToCloseTotal = symbol.quantity * livePrice.closePrice;
                     }
 
-                    return sum + addToSum;
-                }, 0.00);
+                    total += addToTotal;
+                    closeTotal += addToCloseTotal;
+                });
             }
+            const percentageDifference = closeTotal !== 0 ? (((total - closeTotal) / closeTotal) * 100) : 0.00;
             return {
                 name: portfolio.name,
-                total: total.toFixed(2)
+                total: total.toFixed(2),
+                percentageDifference: percentageDifference.toFixed(2),
+                displayColor: percentageDifference >= 0 ? 'green' : 'red'
             }
         });
         return portfolioList;

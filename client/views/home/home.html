@@ -43,8 +43,8 @@
                     <div class="ui link card {{isSelected}}">
                         <div class="content">
                             <div class="header">{{portfolio.name}}</div>
-                            <div class="meta">
-                                <span class="category">${{portfolio.total}}</span>
+                            <div class="description">
+                                <p>${{portfolio.total}} <span class="{{portfolio.displayColor}}">{{portfolio.percentageDifference}}%</span></p>
                             </div>
                         </div>
                     </div>
