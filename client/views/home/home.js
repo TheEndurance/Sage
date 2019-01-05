@@ -29,41 +29,44 @@ Template.home.onCreated(function () {
     //live stock data
     socket.on('connect', () => {
         template.autorun(() => {
-            if (portfoliosHandle.ready()) {
-                const portfolios = Portfolios.find({}).fetch();
-                const symbols = {};
-                portfolios.forEach((portfolio) => {
-                    PortfolioSnapshot.update({ name: portfolio.name }, { name: portfolio.name, createdAt: portfolio.createdAt, symbols: [] }, { upsert: true });
-                    if (!portfolio.transactions || portfolio.transactions.length === 0) return;
-                    portfolio.transactions.forEach((transaction) => {
+            if (!portfoliosHandle.ready()) return;
+
+            const portfolios = Portfolios.find({}).fetch();
+            const symbols = {};
+            portfolios.forEach((portfolio) => {
+                PortfolioSnapshot.update({ name: portfolio.name }, { name: portfolio.name, createdAt: portfolio.createdAt, symbols: [] }, { upsert: true });
+                if (!portfolio.transactions || portfolio.transactions.length === 0) return;
+                portfolio.transactions.forEach((transaction) => {
+                    let incrementQuantity = 0.00;
+                    if (transaction.type === 'buy' || transaction.type === 'sell') {
                         const multiplier = transaction.type === 'buy' ? 1 : -1;
-                        const incrementQuantity = transaction.quantity * multiplier;
+                        incrementQuantity = transaction.quantity * multiplier;
+                    }
 
-                        const symbol = PortfolioSnapshot.findOne({ name: portfolio.name, 'symbols.symbol': transaction.symbol }, { reactive: false });
-                        if (symbol) {
-                            PortfolioSnapshot.update(
-                                { name: portfolio.name, 'symbols.symbol': transaction.symbol },
-                                {
-                                    '$inc':
-                                        { 'symbols.$.quantity': incrementQuantity }
-                                });
-                        } else {
-                            PortfolioSnapshot.update(
-                                { name: portfolio.name },
-                                {
-                                    '$addToSet':
-                                        { symbols: { symbol: transaction.symbol, quantity: incrementQuantity } }
-                                });
-                        }
-                        symbols[transaction.symbol] = true;
-                    });
+                    const symbol = PortfolioSnapshot.findOne({ name: portfolio.name, 'symbols.symbol': transaction.symbol }, { reactive: false });
+                    if (symbol) {
+                        PortfolioSnapshot.update(
+                            { name: portfolio.name, 'symbols.symbol': transaction.symbol },
+                            {
+                                '$inc':
+                                    { 'symbols.$.quantity': incrementQuantity }
+                            });
+                    } else {
+                        PortfolioSnapshot.update(
+                            { name: portfolio.name },
+                            {
+                                '$addToSet':
+                                    { symbols: { symbol: transaction.symbol, quantity: incrementQuantity } }
+                            });
+                    }
+                    symbols[transaction.symbol] = true;
                 });
-                const symbolsString = Object.keys(symbols).reduce((accum, current, index) => {
-                    return index === 0 ? current : accum + ',' + current;
-                }, '');
+            });
+            const symbolsString = Object.keys(symbols).reduce((accum, current, index) => {
+                return index === 0 ? current : accum + ',' + current;
+            }, '');
 
-                socket.emit('subscribe', symbolsString);
-            }
+            socket.emit('subscribe', symbolsString);
         });
     });
 
