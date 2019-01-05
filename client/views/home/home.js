@@ -37,10 +37,16 @@ Template.home.onCreated(function () {
                 PortfolioSnapshot.update({ name: portfolio.name }, { name: portfolio.name, createdAt: portfolio.createdAt, symbols: [] }, { upsert: true });
                 if (!portfolio.transactions || portfolio.transactions.length === 0) return;
                 portfolio.transactions.forEach((transaction) => {
-                    let incrementQuantity = 0.00;
-                    if (transaction.type === 'buy' || transaction.type === 'sell') {
-                        const multiplier = transaction.type === 'buy' ? 1 : -1;
-                        incrementQuantity = transaction.quantity * multiplier;
+                    let incrementQuantity;
+                    switch(transaction.type){
+                        case 'buy':
+                            incrementQuantity = transaction.quantity;
+                            break;
+                        case 'sell':
+                            incrementQuantity = transaction.quantity * -1;
+                            break;
+                        default:
+                            incrementQuantity = 0.00;
                     }
 
                     const symbol = PortfolioSnapshot.findOne({ name: portfolio.name, 'symbols.symbol': transaction.symbol }, { reactive: false });
